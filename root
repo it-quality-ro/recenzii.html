@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Recenzii Energize</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fefae0;
+      margin: 0;
+      padding: 20px;
+    }
+    form {
+      max-width: 600px;
+      margin: auto;
+      background: #fff8dc;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+      border: 1px solid #fce38a;
+    }
+    h2 {
+      text-align: center;
+      color: #FFC107;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background: #FFC107;
+      color: black;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #recenziiContainer {
+      max-width: 800px;
+      margin: 60px auto 40px auto;
+    }
+    .recenzie {
+      background: #ffffff;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border-left: 5px solid #FFC107;
+    }
+    .recenzie p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+<form id="reviewForm">
+  <h2>Lasă o recenzie pentru Energize</h2>
+
+  <label>Nume:</label>
+  <input type="text" id="name" required>
+
+  <label>Tipul lucrării:</label>
+  <select id="type" required>
+    <option value="Instalație nouă">Instalație nouă</option>
+    <option value="Reparație">Reparație</option>
+    <option value="Verificare">Verificare</option>
+    <option value="Automatizare">Automatizare</option>
+  </select>
+
+  <label>Recenzie:</label>
+  <textarea id="message" rows="5" required></textarea>
+
+  <label>Evaluare:</label>
+  <select id="rating" required>
+    <option value="5">⭐⭐⭐⭐⭐</option>
+    <option value="4">⭐⭐⭐⭐</option>
+    <option value="3">⭐⭐⭐</option>
+    <option value="2">⭐⭐</option>
+    <option value="1">⭐</option>
+  </select>
+
+  <button type="submit">Trimite recenzia</button>
+</form>
+
+<div id="recenziiContainer"></div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAPL_B5iN5l9djaVQ9QGM1JGO_vD3eHAqI",
+    authDomain: "energize-electrical-service.firebaseapp.com",
+    projectId: "energize-electrical-service",
+    storageBucket: "energize-electrical-service.appspot.com",
+    messagingSenderId: "488528476137",
+    appId: "1:488528476137:web:88e77de963f04d30e27d78"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  document.getElementById("reviewForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const type = document.getElementById("type").value;
+    const message = document.getElementById("message").value;
+    const rating = parseInt(document.getElementById("rating").value);
+
+    db.collection("recenzii").add({
+      name: name,
+      type: type,
+      message: message,
+      rating: rating,
+      date: new Date()
+    }).then(() => {
+      alert("Recenzia a fost trimisă cu succes!");
+      document.getElementById("reviewForm").reset();
+      afiseazaRecenzii();
+    }).catch((error) => {
+      console.error("Eroare la salvare:", error);
+      alert("Eroare: " + error.message);
+    });
+  });
+
+  function afiseazaRecenzii() {
+    const container = document.getElementById("recenziiContainer");
+    container.innerHTML = "<h2 style='text-align:center;color:#FFC107;'>Recenzii recente</h2>";
+
+    db.collection("recenzii").orderBy("date", "desc").limit(10).get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const card = document.createElement("div");
+        card.className = "recenzie";
+
+        card.innerHTML = `
+          <p style="font-size:16px;font-style:italic;">„${data.message}”</p>
+          <p><strong>${data.name}</strong> — ${data.type}</p>
+          <p style="color:#FFD700;font-size:18px;">${"★".repeat(data.rating)}${"☆".repeat(5 - data.rating)}</p>
+          <p style="font-size:12px;color:#777;">${new Date(data.date.toDate()).toLocaleDateString()}</p>
+        `;
+
+        container.appendChild(card);
+      });
+    }).catch((error) => {
+      console.error("Eroare la afișare:", error);
+    });
+  }
+
+  afiseazaRecenzii();
+</script>
+
+</body>
+</html>
